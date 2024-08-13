@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Universidad</title>
+  <!-- Bootstrap CSS CDN -->
+  <link rel="stylesheet" href="{% static 'bootstrap4.6/css/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'fonts/css/font-awesome.css' %}">
+  <link rel="stylesheet" href="{% static 'general/general.css' %}?{{version_static}}">
+</head>
+
+<body class="full-Cimage text-dark">   
+  <div class="container-fluid">
+    <div class="row h-100 mt-5 align-items-center">
+      <div class="col-6 col-md-4 offset-4 card pt-3 rounded  shadow">
+          <div class="row  justify-content-center">
+            <h3 class="text-Csecondary"><b>¡Bienvenido!</b></h3>
+          </div>
+          <div class="row  justify-content-center">
+            Ingrese a su Cuenta
+          </div>
+          <hr>
+        <div class="card-body ">
+          <form action="" method="POST">
+            {% csrf_token %}
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Usuario</label>
+                  <div class="input-group">
+                    <div class="input-group-prepend">
+                      <span class="input-group-text"><i class="fa fa-envelope-open-o" aria-hidden="true"></i></span>
+                    </div>
+                    <input type="text" id="login_username" placeholder="Ingrese su Usuario" class="form-control"
+                    name="username">
+                  </div>
+                  <div class="help-block with-errors text-danger">{{form.errors.username}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <div class="form-group">
+                  <label>Contraseña</label>
+                    <div class="input-group">
+                      <div class="input-group-prepend">
+                        <span class="input-group-text"><i class="fa fa-unlock" aria-hidden="true"></i></span>
+                      </div>
+                      <input type="password" id="login_password" placeholder="Ingrese su Contraseña" class="form-control"
+                        name="password">
+                      <div class="input-group-prepend">
+                        <span class="text-Csecondary input-group-text bg-white border-left-0">
+                          <i class="fa js-eye-show fa-eye-slash"></i>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="help-block with-errors text-danger">{{form.errors.password}}</div>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3 mb-3">
+              <div class="col-md-12">
+                <button type="submit" class="btn bg-Csecondary  btn-lg btn-block"><a class="text-Cprimary" >Ingresar</a>
+                  
+                </button>
+              </div>
+            </div>
+            {% for err in form.non_field_errors %}
+            <div class='row mx-0 alert-danger'>
+              {{err}}
+            </div>
+            {% endfor %}
+          </form>        
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script type="text/javascript" src="{% static 'jquery/jquery.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'bootstrap4.6/js/bootstrap.bundle.min.js' %}"></script>
+  <script type="text/javascript" src="{% static 'general/general.js' %}?{{version_static}}"></script>
+  <script type="text/javascript" src="{% static 'general/config.js' %}?{{version_static}}"></script>
+  <script type="text/javascript" src="{% static 'general/apis.js' %}?{{version_static}}"></script>
+  <script type="text/javascript" src="{% static 'apps/profiles/generalProfile.js' %}?{{version_static}}"></script>
+</body>
+
+</html>

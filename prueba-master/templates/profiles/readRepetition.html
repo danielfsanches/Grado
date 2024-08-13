@@ -1,0 +1,244 @@
+{% extends 'general/master.html' %}
+{% block script %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>   
+    <script type="text/javascript" src="{% static 'apps/profiles/readReport.js' %}"></script>
+    <script>
+    var tableData = {{ graph_data|safe }};
+
+    </script>
+{% endblock %}
+{% load i18n %}
+{% trans "Import" %}
+{% block content %}
+<div class="container-fluid">
+  <div class="row my-2 justify-content-end">
+    <div class="col-8">
+        <h2><b>Repetición de Espacios Academicos</b></h2>
+    </div>
+    <div class="col-2">
+      <button type="submit" form="form_filter" value="download_xls" name="action" class="btn bg-Csecondary text-Cprimary btn-block text-truncate "><i class="fa fa-download pr-2"></i> Exportar (xls)</button>
+    </div> 
+    <div class="col-2">
+      <button type="submit" form="form_filter" value="download_txt" name="action" class="btn bg-Csecondary text-Cprimary btn-block text-truncate "><i class="fa fa-download pr-2"></i> Exportar (txt)</button>
+    </div> 
+  </div>
+  <form id="form_filter" class="row" method="get">
+    <div class="col-12">
+      <div class="form-group">
+        <input type="text" class="form-control js-input-search" name="search" value="{{request.GET.search}}" placeholder="Filtrar por nombre" id="search-input">
+      </div>
+    </div>
+    <div class="col-1">
+      {%if request.GET.graph %}
+      <a class="btn bg-Csecondary text-Cprimary " href="{% url 'profiles:readRepetition'%}"><i class="fa fa-bars"></i></a>
+      {%else %}
+      <a class="btn bg-Csecondary text-Cprimary " href="{% url 'profiles:readRepetition'%}?graph=true"><i class="fa fa-bar-chart"></i></a>
+      {%endif %}
+      {%if user.groups.all.0.id == 1 %}
+      <a class="btn bg-Csecondary text-Cprimary" data-toggle="collapse" href="#id_collapse" role="button" aria-expanded="false" aria-controls="id_collapse"><i class="fa fa-cloud-upload" aria-hidden="true"></i></a>
+      {%endif %}
+    </div> 
+    <div class="col-2 offset-7">
+      <button type="submit" value="search" name="action" class="btn bg-Csecondary text-Cprimary btn-block text-truncate "><i class="fa fa-search pr-2"></i> Buscar</button>
+    </div>            
+    <div class="col-2 ">
+      <a href="#"><button type="button" class="btn bg-Csecondary text-Cprimary btn-block text-truncate btn_clean"><i class="fa fa-eraser pr-2"></i> Limpiar Filtro</button></a>
+    </div>  
+  </form>
+  <form class="row mt-5 collapse" id="id_collapse" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="col-12 font-weight-bold small">
+        <div class="row d-flex justify-content-center">
+            <div class="col-6">
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+                        <button class="input-group-text bg-Csecondary text-white small btn-sm" type="submit" value="upload" name="action">
+                            <div class="small">Importar</div>
+                        </button>
+                    </div>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" type="file" name="upload_file" required>
+                        <label class="custom-file-label">Favor suba un archivo</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% if result %}
+      {% if result.has_errors %}
+      <div class="col-12">
+          <h5>{% trans "Errors" %}</h5>
+          <div class="row mx-0">
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                  {% for error in result.base_errors  %}
+                  <div class="col-12">
+                      {{ error.error }}
+                      <div class="traceback">
+                          {{ error.traceback|linebreaks }}
+                      </div>
+                  </div>
+                  {% endfor %}
+                  {% for line, errors in result.row_errors %}
+                  {% for error in errors %}
+                  <div class="col-12">
+                      {% trans "Line number" %}: {{ line }} - {{ error.error }}
+                      <div>{{ error.row.values|join:", " }}</div>
+                  </div>
+                  {% endfor %}
+                  {% endfor %}
+                  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                  </button>
+              </div>
+          </div>
+      </div>
+      {% elif result.has_validation_errors %}
+      <div class="col-12">
+        <table class="import-preview">
+            <thead>
+                <tr>
+                    <th>{% trans "Row" %}</th>
+                    <th>{% trans "Errors" %}</th>
+                    {% for field in result.diff_headers %}
+                    <th>{{ field }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in result.invalid_rows %}
+                    <tr>
+                        <td>{{ row.number }} </td>
+                        <td class="errors">
+                            <span class="validation-error-count">{{ row.error_count }}</span>
+                            <div class="validation-error-container">
+                                <ul class="validation-error-list">
+                                    {% for field_name, error_list in row.field_specific_errors.items %}
+                                    <li>
+                                        <span class="validation-error-field-label">{{ field_name }}</span>
+                                        <ul>
+                                            {% for error in error_list %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% endfor %}
+                                    {% if row.non_field_specific_errors %}
+                                    <li>
+                                        <span class="validation-error-field-label">{% trans "Non field specific" %}</span>
+                                        <ul>
+                                            {% for error in row.non_field_specific_errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </td>
+                        {% for field in row.values %}
+                        <td>{{ field }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="col-12">
+        <h5>{% trans "Preview" %}</h5>
+        <table class="table table-sm">
+          <thead>
+              <tr class="h6">
+              <th ></th>
+              {% for field in result.diff_headers %}
+                  <th scope="col">{{ field }}</th>
+              {% endfor %}
+              </tr>
+          </thead>
+          {% for row in result.valid_rows %}
+          <tr>
+              <th scope="row">
+                  {% if row.import_type == 'new' %}
+                      {% trans "New" %}
+                  {% elif row.import_type == 'skip' %}
+                      {% trans "Skipped" %}
+                  {% elif row.import_type == 'delete' %}
+                      {% trans "Delete" %}
+                  {% elif row.import_type == 'update' %}
+                      {% trans "Update" %}
+                  {% endif %}
+              </th>
+              {% for field in row.diff %}
+              <td>{{ field }}</td>
+              {% endfor %}
+          </tr>
+          {% endfor %}
+        </table>
+        
+      </div>
+      {% endif %}
+    {% endif %}
+</form>
+  {%if request.GET.graph %}
+  <div class="row mx-0">
+    <div class="col-8 offset-2">
+      <h3>Reporte de repetición por espacio académico</h3>
+      <canvas id="id_graph"></canvas>
+    </div>
+  </div>
+  
+  {%else %}
+  <div class="row mx-0">
+    <div class="col-4 offset-8 text-right">
+      Total: {{amount_total}}
+    </div>
+    <div class="col-12 p-0 ">
+      <div class="table-responsive">
+        <div class="table-wrapper vh-C60">
+          <table class="table">
+            <thead class="sticky-top bg-Csecondary text-Cprimary">
+              <tr>
+                {% for header in headers %}
+                <th>{{ header }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+              {% for row in data %}
+            <tr>
+                {% for item in row %}
+                <td>{{ item }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+            </tbody>
+          </table>
+      </div>
+      </div>
+    </div>
+  </div>
+  <div class="row mx-0 d-flex justify-content-center">
+    {% if data.has_previous %}
+      <a  class="border-0 text-Csecondary d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="?{{request.GET.urlencode}}&page=1"><i class="fa fa-fast-backward"></i></a>
+    {% endif %}
+    {% if data.has_previous %}
+      <a  class="border-0 text-Csecondary d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="?{{request.GET.urlencode}}&page={{ data.previous_page_number }}"><i class="fa fa-step-backward"></i></a>
+    {% endif %}
+    {% for i in data.paginator.page_range %}
+      {% if data.number == i %}
+        <a  class="rounded-circle bg-Csecondary text-white d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="" disabled>{{ i }}</a>
+      {% else %}
+        <a  class="rounded-circle border-0 text-black-50 d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="?{{request.GET.urlencode}}&page={{ i }}" >{{ i }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if data.has_next%}
+      <a  class="border-0 text-Csecondary d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="?{{request.GET.urlencode}}&page={{ data.next_page_number }}"><i class="fa fa-step-forward"></i></a>
+    {% endif %}
+    {% if data.has_next %}
+      <a  class="border-0 text-Csecondary d-flex justify-content-center align-items-center px-2 mx-1 my-1 paginatorH" href="?{{request.GET.urlencode}}&page={{ data.paginator.num_pages }}"><i class="fa fa-fast-forward"></i></a>
+    {% endif %}
+  </div>
+</div>
+{%endif%}
+{% endblock %}
+
